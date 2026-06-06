@@ -1,0 +1,355 @@
+<!--
+ =============================================================================
+ This is file 8/12 – Web Interface (Part 1: HTML)
+ =============================================================================
+ 
+ Purpose: Main HTML page for the SCARA robot web control interface.
+ This page provides controls for moving the robot, controlling the pen,
+ calibrating encoders and PID, and visualizing the workspace.
+ 
+ This file will be uploaded to ESP32's LittleFS and served by the web server.
+ =============================================================================
+-->
+
+<!DOCTYPE html>
+<!-- Set the language to English for better accessibility and SEO -->
+<html lang="en">
+
+<head>
+    <!-- Character encoding - UTF-8 supports all characters -->
+    <meta charset="UTF-8">
+    
+    <!-- Viewport meta tag makes the page responsive on mobile devices -->
+    <!-- width=device-width: page width matches device width -->
+    <!-- initial-scale=1.0: no zoom when page first loads -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Page title shown in browser tab -->
+    <title>SCARA Robot Control</title>
+    
+    <!-- Link to the external CSS stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- ============================================================
+         MAIN CONTAINER
+         Everything on the page is wrapped in this container
+         ============================================================ -->
+    <div class="container">
+        
+        <!-- HEADER SECTION -->
+        <!-- Contains the title and connection status -->
+        <header class="header">
+            <!-- Main title of the page -->
+            <h1>🤖 SCARA Robot Control</h1>
+            <!-- Connection status indicator (updated by JavaScript) -->
+            <div id="connection-status" class="status-indicator">
+                Connecting...
+            </div>
+        </header>
+
+        <!-- ============================================================
+         MAIN CONTENT GRID
+         The page is divided into sections using CSS Grid
+         ============================================================ -->
+        <main class="main-grid">
+            
+            <!-- ------------------------------------------------------
+                 SECTION 1: STATUS PANEL
+                 Shows real-time robot position and state
+                 ------------------------------------------------------ -->
+            <section class="panel status-panel">
+                <!-- Section title -->
+                <h2>📊 Status</h2>
+                
+                <!-- Position display cards -->
+                <!-- Each card shows a specific value -->
+                <div class="status-grid">
+                    <!-- X position in millimeters -->
+                    <div class="status-card">
+                        <span class="status-label">X Position</span>
+                        <!-- id="pos-x" is used by JavaScript to update this -->
+                        <span class="status-value" id="pos-x">-- mm</span>
+                    </div>
+                    
+                    <!-- Y position in millimeters -->
+                    <div class="status-card">
+                        <span class="status-label">Y Position</span>
+                        <span class="status-value" id="pos-y">-- mm</span>
+                    </div>
+                    
+                    <!-- Left motor angle in degrees -->
+                    <div class="status-card">
+                        <span class="status-label">Left Angle</span>
+                        <span class="status-value" id="angle-left">-- °</span>
+                    </div>
+                    
+                    <!-- Right motor angle in degrees -->
+                    <div class="status-card">
+                        <span class="status-label">Right Angle</span>
+                        <span class="status-value" id="angle-right">-- °</span>
+                    </div>
+                </div>
+                
+                <!-- Pen status indicator -->
+                <div class="pen-status">
+                    <!-- Shows if pen is up or down -->
+                    <span class="status-label">Pen:</span>
+                    <span id="pen-state" class="pen-indicator">--</span>
+                </div>
+            </section>
+
+            <!-- ------------------------------------------------------
+                 SECTION 2: PEN CONTROL
+                 Buttons to raise and lower the pen
+                 ------------------------------------------------------ -->
+            <section class="panel control-panel">
+                <h2>✋ Pen Control</h2>
+                
+                <!-- Pen up button - calls setPen(true) when clicked -->
+                <button class="btn btn-primary" onclick="setPen(true)">
+                    ⬆️ Pen Up
+                </button>
+                
+                <!-- Pen down button - calls setPen(false) when clicked -->
+                <button class="btn btn-secondary" onclick="setPen(false)">
+                    ⬇️ Pen Down
+                </button>
+            </section>
+
+            <!-- ------------------------------------------------------
+                 SECTION 3: WORKSPACE VISUALIZER
+                 SVG canvas showing robot reach and current position
+                 ------------------------------------------------------ -->
+            <section class="panel workspace-panel">
+                <h2>🗺️ Workspace</h2>
+                
+                <!-- SVG canvas for drawing the workspace visualization -->
+                <!-- viewBox defines the coordinate system (0 0 400 400) -->
+                <svg id="workspace-svg" viewBox="0 0 400 400" class="workspace-svg">
+                    <!-- Background grid (defined in CSS) -->
+                    <rect class="workspace-bg" x="0" y="0" width="400" height="400" />
+                    
+                    <!-- Reachable area (will be drawn by JavaScript) -->
+                    <!-- Two overlapping circles representing arm reach -->
+                    <circle id="reach-left" class="reach-circle" cx="100" cy="200" r="0" />
+                    <circle id="reach-right" class="reach-circle" cx="300" cy="200" r="0" />
+                    
+                    <!-- Arm links (drawn by JavaScript) -->
+                    <line id="arm1" class="arm-link" x1="0" y1="0" x2="0" y2="0" />
+                    <line id="arm2" class="arm-link" x1="0" y1="0" x2="0" y2="0" />
+                    
+                    <!-- Current position crosshair -->
+                    <g id="position-marker">
+                        <!-- Horizontal line of crosshair -->
+                        <line class="crosshair" x1="-10" y1="0" x2="10" y2="0" />
+                        <!-- Vertical line of crosshair -->
+                        <line class="crosshair" x1="0" y1="-10" x2="0" y2="10" />
+                        <!-- Circle around crosshair -->
+                        <circle class="crosshair-circle" cx="0" cy="0" r="5" />
+                    </g>
+                    
+                    <!-- Motor positions (small circles) -->
+                    <circle class="motor-marker" cx="100" cy="200" r="5" />
+                    <circle class="motor-marker" cx="300" cy="200" r="5" />
+                </svg>
+                
+                <!-- Legend for the workspace -->
+                <div class="workspace-legend">
+                    <span class="legend-item">
+                        <span class="legend-color motor-color"></span> Motors
+                    </span>
+                    <span class="legend-item">
+                        <span class="legend-color reach-color"></span> Reach
+                    </span>
+                    <span class="legend-item">
+                        <span class="legend-color arm-color"></span> Arms
+                    </span>
+                </div>
+            </section>
+
+            <!-- ------------------------------------------------------
+                 SECTION 4: JOG CONTROLS
+                 Manual positioning controls for X and Y axes
+                 ------------------------------------------------------ -->
+            <section class="panel jog-panel">
+                <h2>🎮 Jog Controls</h2>
+                
+                <!-- Step size selector -->
+                <!-- Users can choose how far to move with each button press -->
+                <div class="step-size-selector">
+                    <span class="status-label">Step Size:</span>
+                    <!-- Radio buttons for step size selection -->
+                    <label class="radio-label">
+                        <input type="radio" name="stepSize" value="1" checked> 1mm
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="stepSize" value="5"> 5mm
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="stepSize" value="10"> 10mm
+                    </label>
+                </div>
+                
+                <!-- Y+ button - moves robot up (positive Y) -->
+                <!-- Uses Unicode up arrow for the icon -->
+                <button class="btn btn-jog" onclick="jog('y', getStepSize())">
+                    ⬆️ Y+
+                </button>
+                
+                <!-- X- and X+ buttons side by side -->
+                <div class="jog-row">
+                    <!-- X- button - moves robot left (negative X) -->
+                    <button class="btn btn-jog" onclick="jog('x', -getStepSize())">
+                        ⬅️ X-
+                    </button>
+                    <!-- X+ button - moves robot right (positive X) -->
+                    <button class="btn btn-jog" onclick="jog('x', getStepSize())">
+                        X+ ➡️
+                    </button>
+                </div>
+                
+                <!-- Y- button - moves robot down (negative Y) -->
+                <button class="btn btn-jog" onclick="jog('y', -getStepSize())">
+                    Y- ⬇️
+                </button>
+                
+                <!-- Home button - returns robot to home position -->
+                <button class="btn btn-warning" onclick="home()">
+                    🏠 Home
+                </button>
+            </section>
+
+            <!-- ------------------------------------------------------
+                 SECTION 5: CALIBRATION PANEL
+                 Tools for calibrating encoders and tuning PID
+                 ------------------------------------------------------ -->
+            <section class="panel calibration-panel">
+                <h2>⚙️ Calibration</h2>
+                
+                <!-- Encoder zero offset calibration -->
+                <div class="calibration-section">
+                    <h3>Encoder Zero</h3>
+                    <p class="help-text">Set current position as zero for each motor</p>
+                    
+                    <!-- Button to calibrate left motor encoder -->
+                    <button class="btn btn-small" onclick="calibrateEncoder(0)">
+                        Set Left = 0°
+                    </button>
+                    
+                    <!-- Button to calibrate right motor encoder -->
+                    <button class="btn btn-small" onclick="calibrateEncoder(1)">
+                        Set Right = 0°
+                    </button>
+                </div>
+                
+                <!-- PID tuning sliders -->
+                <div class="calibration-section">
+                    <h3>PID Tuning</h3>
+                    
+                    <!-- Kp (Proportional) slider -->
+                    <!-- range input creates a slider from 0 to 10, step 0.1 -->
+                    <label class="slider-label">
+                        Kp:
+                        <!-- id is used by JavaScript to read/update value -->
+                        <span id="kp-value" class="slider-value">1.0</span>
+                        <input type="range" id="kp-slider" class="slider" 
+                               min="0" max="10" step="0.1" value="1.0"
+                               oninput="updateSliderValue('kp')">
+                    </label>
+                    
+                    <!-- Ki (Integral) slider -->
+                    <label class="slider-label">
+                        Ki:
+                        <span id="ki-value" class="slider-value">0.0</span>
+                        <input type="range" id="ki-slider" class="slider" 
+                               min="0" max="1" step="0.01" value="0.0"
+                               oninput="updateSliderValue('ki')">
+                    </label>
+                    
+                    <!-- Kd (Derivative) slider -->
+                    <label class="slider-label">
+                        Kd:
+                        <span id="kd-value" class="slider-value">0.1</span>
+                        <input type="range" id="kd-slider" class="slider" 
+                               min="0" max="1" step="0.01" value="0.1"
+                               oninput="updateSliderValue('kd')">
+                    </label>
+                    
+                    <!-- Apply PID button - sends the new values to the robot -->
+                    <button class="btn btn-primary" onclick="updatePID()">
+                        Apply PID
+                    </button>
+                </div>
+                
+                <!-- Motor raw jog (for testing individual motors) -->
+                <div class="calibration-section">
+                    <h3>Motor Raw Jog</h3>
+                    <p class="help-text">Step individual motors for testing</p>
+                    
+                    <!-- Left motor controls -->
+                    <div class="motor-controls">
+                        <span>Left:</span>
+                        <button class="btn btn-tiny" onclick="motorRaw(0, -10)">-10</button>
+                        <button class="btn btn-tiny" onclick="motorRaw(0, -1)">-1</button>
+                        <button class="btn btn-tiny" onclick="motorRaw(0, 1)">+1</button>
+                        <button class="btn btn-tiny" onclick="motorRaw(0, 10)">+10</button>
+                    </div>
+                    
+                    <!-- Right motor controls -->
+                    <div class="motor-controls">
+                        <span>Right:</span>
+                        <button class="btn btn-tiny" onclick="motorRaw(1, -10)">-10</button>
+                        <button class="btn btn-tiny" onclick="motorRaw(1, -1)">-1</button>
+                        <button class="btn btn-tiny" onclick="motorRaw(1, 1)">+1</button>
+                        <button class="btn btn-tiny" onclick="motorRaw(1, 10)">+10</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ------------------------------------------------------
+                 SECTION 6: G-CODE PANEL
+                 Upload and send G-code files to the robot
+                 ------------------------------------------------------ -->
+            <section class="panel gcode-panel">
+                <h2>📄 G-Code</h2>
+                
+                <!-- File input for G-code upload -->
+                <!-- accept=".nc,.gcode" limits file types shown in dialog -->
+                <input type="file" id="gcode-file" class="file-input" 
+                       accept=".nc,.gcode,.txt">
+                
+                <!-- Preview area showing file contents -->
+                <div class="gcode-preview">
+                    <pre id="gcode-content">No file selected</pre>
+                </div>
+                
+                <!-- Send button - sends the G-code to the robot -->
+                <button class="btn btn-primary" onclick="sendGcode()">
+                    ▶️ Send G-Code
+                </button>
+            </section>
+
+        </main>
+
+        <!-- ============================================================
+         STATUS MESSAGE AREA
+         Shows success/error messages at the bottom of the page
+         ============================================================ -->
+        <footer class="status-bar">
+            <!-- id="status-message" is updated by JavaScript for feedback -->
+            <div id="status-message" class="status-message">
+                Ready
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Link to the external JavaScript file -->
+    <!-- This should be at the end of body for faster page loading -->
+    <script src="script.js"></script>
+
+</body>
+
+</html>
