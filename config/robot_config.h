@@ -94,22 +94,11 @@
  */
 
 /** Offset to subtract from left encoder readings to get true angle. */
-float encoderLeftZeroOffset = 0.0f;
-
-/** Offset to subtract from right encoder readings to get true angle. */
-float encoderRightZeroOffset = 0.0f;
+float encoderLeftZeroOffset = 0.0f;   // Placeholder: manually calibrated later
+float encoderRightZeroOffset = 0.0f;  // Placeholder: manually calibrated later
 
 // =============================================================================
-// SECTION 4: HOMING SENSOR
-// =============================================================================
-// The TCRT5000 infrared sensor detects when the robot is at its home position.
-// It's used to find the zero reference point for each motor.
-
-/** GPIO pin connected to the homing sensor output. */
-#define HOMING_SENSOR_PIN 10
-
-// =============================================================================
-// SECTION 5: I2C COMMUNICATION PINS
+// SECTION 4: I2C COMMUNICATION PINS
 // =============================================================================
 // I2C is a two-wire bus for communicating with encoders and the multiplexer.
 
@@ -123,7 +112,7 @@ float encoderRightZeroOffset = 0.0f;
 #define I2C_FREQUENCY 400000
 
 // =============================================================================
-// SECTION 6: PEN MOTOR PARAMETERS
+// SECTION 5: PEN MOTOR PARAMETERS
 // =============================================================================
 // The pen lift motor doesn't have an encoder, so we control it by step count.
 
@@ -135,7 +124,7 @@ float encoderRightZeroOffset = 0.0f;
 #define PEN_STEPS_UP 400
 
 // =============================================================================
-// SECTION 7: MOTION LIMITS
+// SECTION 6: MOTION LIMITS
 // =============================================================================
 // These limits prevent the robot from hitting its physical boundaries.
 // Angles are in degrees.
@@ -159,7 +148,7 @@ float encoderRightZeroOffset = 0.0f;
 #define MAX_ACCELERATION_DEG_PER_SEC2 360.0f
 
 // =============================================================================
-// SECTION 8: PID CONTROLLER DEFAULTS
+// SECTION 7: PID CONTROLLER DEFAULTS
 // =============================================================================
 // PID controllers automatically adjust motor power to reach target angles.
 // These are starting values; you may need to tune them for your robot.
@@ -189,7 +178,7 @@ float encoderRightZeroOffset = 0.0f;
 #define PID_SAMPLE_RATE_HZ 100
 
 // =============================================================================
-// SECTION 9: SERIAL COMMUNICATION
+// SECTION 8: SERIAL COMMUNICATION
 // =============================================================================
 // Serial is used for debugging and receiving commands from a computer.
 
