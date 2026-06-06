@@ -35,3 +35,156 @@ All software is modular, beginner‑friendly, and runs on an **ESP32‑C3 SuperM
 
 ## 📁 Software Architecture (Modular)
 
+```
+
+SCARA_Robot/
+├── config/
+│   └── robot_config.h          # All constants & pin definitions
+├── drivers/
+│   ├── motor_driver.h/.cpp     # Stepper motor control (open loop)
+│   ├── encoder_driver.h/.cpp   # AS5600 via TCA9548A
+├── control/
+│   ├── pid_controller.h/.cpp   # Position PID
+│   ├── closed_loop_motor.h/.cpp# Combines motor + encoder + PID
+├── kinematics/
+│   ├── inverse_kinematics.h/.cpp # 5‑bar geometry solver
+│   ├── workspace.h/.cpp          # Reachability checks
+├── motion/
+│   ├── motion_planner.h/.cpp     # Trapezoidal motion profiles
+│   ├── line_drawer.h/.cpp        # High‑level drawing commands
+├── system/
+│   ├── ota_manager.h/.cpp        # Over‑the‑air updates
+│   ├── calibration.h/.cpp        # Encoder zero & PID tuning
+│   ├── homing.h/.cpp             # Homing routine (manual/button)
+├── web/
+│   ├── web_server.h/.cpp         # AsyncWebServer + REST API
+│   ├── data/
+│   │   ├── index.html            # Web UI
+│   │   ├── style.css
+│   │   └── script.js
+└── SCARA_Robot.ino               # Main entry point
+
+
+Each module is **independent** – you can test them one by one.
+
+---
+
+## 🛠️ Setup Instructions
+
+### 1. Install Arduino IDE & ESP32‑C3 Support
+
+- Download [Arduino IDE](https://www.arduino.cc/en/software)
+- Add ESP32 board URL:  
+  `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
+- Install **esp32** via Boards Manager (version 2.0.14+)
+- Select board: `ESP32C3 Dev Module`
+- Set **USB CDC On Boot** → `Enabled` (so Serial.print works)
+
+### 2. Install Required Libraries
+
+| Library | Install via |
+|---------|-------------|
+| AS5600 | Library Manager (Rob Tillaart) |
+| Adafruit TCA9548A | Library Manager |
+| PID (Brett Beauregard) | Library Manager |
+| ESPAsyncWebServer | [GitHub](https://github.com/me-no-dev/ESPAsyncWebServer) (manual) |
+| AsyncTCP | [GitHub](https://github.com/me-no-dev/AsyncTCP) (manual) |
+| ArduinoOTA | Built‑in (ESP32 core) |
+
+### 3. First Flash (USB)
+
+- Connect ESP32‑C3 via USB data cable
+- Select the correct COM port
+- Upload `SCARA_Robot.ino` (the main sketch)
+- If upload fails, **hold BOOT** → press RST → release BOOT → upload again
+
+### 4. Subsequent Updates (OTA)
+
+After the first flash includes the OTA module, you can update over WiFi:
+
+- Go to **Tools → Port → Network ports** → select your ESP32's IP address
+- Click **Upload** – no USB cable needed!
+
+> The ESP32 will appear as `SCARA-Robot` in the Arduino IDE network ports.
+
+### 5. Web Interface
+
+Once the robot is on your WiFi, open a browser and enter:
+
+You will see a dashboard with:
+- Real‑time position of both arms
+- Pen up/down buttons
+- Manual jogging (X/Y or individual motors)
+- G‑code upload & execution
+- Calibration tools (set encoder offsets, PID tuning)
+
+---
+
+## 🚀 Roadmap (12 Steps)
+
+| # | Module | Status |
+|---|--------|--------|
+| 1 | `robot_config.h` | ✅ Completed |
+| 2 | Motor Driver (open loop) | 🟡 In progress |
+| 3 | Encoder Driver | ⏳ Pending |
+| 4 | PID Controller | ⏳ Pending |
+| 5 | Closed‑Loop Motor | ⏳ Pending |
+| 6 | OTA Updates | ⏳ Pending |
+| 7 | Web Server + REST API | ⏳ Pending |
+| 8 | Web UI (HTML/CSS/JS) | ⏳ Pending |
+| 9 | Inverse Kinematics | ⏳ Pending |
+| 10 | Motion Planner | ⏳ Pending |
+| 11 | G‑code Parser | ⏳ Pending |
+| 12 | Full Integration & Testing | ⏳ Pending |
+
+> Follow the instructions in this repo’s **OpenHands prompts** (see below) to generate each module with **line‑by‑line explanations**.
+
+---
+
+## 📝 Using OpenHands with This Repository
+
+You have granted OpenHands access to this GitHub repo. Use the following prompts (copy‑paste into OpenHands) to generate code:
+
+- **Prompt 1 – robot_config.h** (already done)
+- **Prompt 2 – Motor Driver** → [Link to prompt](./prompts/prompt_2_motor_driver.txt)
+- **Prompt 3 – Encoder Driver** → (will be added)
+- …
+
+Each prompt instructs OpenHands to **write the file directly into the repo** and **comment every line** for beginners.
+
+> If you prefer manual creation, copy the code from OpenHands and commit via GitHub web or git command line.
+
+---
+
+## ⚙️ Robot Geometry
+
+| Parameter | Value |
+|-----------|-------|
+| Motor spacing | 50 mm |
+| Upper arm length (L1) | 70 mm |
+| Forearm length (L2) | 100 mm |
+| Pen lift range | ~ 10 mm (mechanical, via motor steps) |
+
+The inverse kinematics solve for **elbow‑up** configuration only (simpler for drawing).
+
+---
+
+## 🧪 Testing After Each Step
+
+After you generate a module, test it with a minimal sketch before moving on. For example:
+
+**Test motor driver alone:**
+```cpp
+#include "config/robot_config.h"
+#include "drivers/motor_driver.h"
+
+MotorDriver motor;
+void setup() {
+  Serial.begin(115200);
+  motor.begin(MOTOR1_STEP_PIN, MOTOR1_DIR_PIN, 15);
+  motor.moveTo(4096); // one full revolution
+}
+void loop() {
+  motor.update();
+}
+
