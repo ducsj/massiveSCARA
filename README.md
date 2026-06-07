@@ -137,24 +137,14 @@ You will see a dashboard with:
 | 11 | G‑code Parser | ⏳ Pending |
 | 12 | Full Integration & Testing | ⏳ Pending |
 
-> Follow the instructions in this repo’s **OpenHands prompts** (see below) to generate each module with **line‑by‑line explanations**.
+> Follow the instructions in this repo’s 
 
 ---
 
 ## 📝 Using OpenHands with This Repository
 
-You have granted OpenHands access to this GitHub repo. Use the following prompts (copy‑paste into OpenHands) to generate code:
 
-- **Prompt 1 – robot_config.h** (already done)
-- **Prompt 2 – Motor Driver** → [Link to prompt](./prompts/prompt_2_motor_driver.txt)
-- **Prompt 3 – Encoder Driver** → (will be added)
-- …
 
-Each prompt instructs OpenHands to **write the file directly into the repo** and **comment every line** for beginners.
-
-> If you prefer manual creation, copy the code from OpenHands and commit via GitHub web or git command line.
-
----
 
 ## ⚙️ Robot Geometry
 
@@ -167,24 +157,5 @@ Each prompt instructs OpenHands to **write the file directly into the repo** and
 
 The inverse kinematics solve for **elbow‑up** configuration only (simpler for drawing).
 
----
-
-## 🧪 Testing After Each Step
-
-After you generate a module, test it with a minimal sketch before moving on. For example:
-
-**Test motor driver alone:**
-```cpp
-#include "config/robot_config.h"
-#include "drivers/motor_driver.h"
-
-MotorDriver motor;
-void setup() {
-  Serial.begin(115200);
-  motor.begin(MOTOR1_STEP_PIN, MOTOR1_DIR_PIN, 15);
-  motor.moveTo(4096); // one full revolution
-}
-void loop() {
-  motor.update();
 }
 
