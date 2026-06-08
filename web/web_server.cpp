@@ -3,7 +3,7 @@
  * This is file 7/12 – Web Server + REST API module.
  * =============================================================================
  * 
- * Purpose: Implementation of the WebServer class.
+ * Purpose: Implementation of the SCARAWebServer class.
  * 
  * This module provides a REST API for controlling the SCARA robot over WiFi.
  * It's built on ESPAsyncWebServer for non-blocking operation.
@@ -37,7 +37,7 @@
 /**
  * Constructor - initialize member variables to safe defaults.
  */
-WebServer::WebServer() {
+SCARAWebServer::SCARAWebServer() {
     // Create the async web server on port 80
     _server = new AsyncWebServer(WEB_PORT);
 }
@@ -45,7 +45,7 @@ WebServer::WebServer() {
 /**
  * Initialize the web server and set up all routes.
  */
-void WebServer::begin() {
+void SCARAWebServer::begin() {
     Serial.println("===========================================");
     Serial.println("Web Server Initializing...");
     Serial.println("===========================================");
@@ -590,7 +590,7 @@ void WebServer::begin() {
  * The AsyncWebServer is event-driven, so it handles connections
  * automatically when requests come in.
  */
-void WebServer::handleClient() {
+void SCARAWebServer::handleClient() {
     // The AsyncWebServer handles connections asynchronously,
     // so there's nothing to do here unless you have
     // periodic tasks to run.
@@ -600,7 +600,7 @@ void WebServer::handleClient() {
 /**
  * Create a JSON response object with standard format.
  */
-void WebServer::_createResponse(JsonDocument& response, bool success, const char* message) {
+void SCARAWebServer::_createResponse(JsonDocument& response, bool success, const char* message) {
     // Set the success flag
     response["success"] = success;
     
@@ -611,7 +611,7 @@ void WebServer::_createResponse(JsonDocument& response, bool success, const char
 /**
  * Send a JSON response to a web request.
  */
-void WebServer::_sendJsonResponse(AsyncWebServerRequest* request, bool success, 
+void SCARAWebServer::_sendJsonResponse(AsyncWebServerRequest* request, bool success, 
                                  const char* message, JsonObject* data) {
     // Create a JSON document for the response
     StaticJsonDocument<256> doc;

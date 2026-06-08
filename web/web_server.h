@@ -3,7 +3,7 @@
  * This is file 7/12 – Web Server + REST API module.
  * =============================================================================
  * 
- * Purpose: Header file for the WebServer class that provides a REST API
+ * Purpose: Header file for the SCARAWebServer class that provides a REST API
  * for controlling the SCARA robot over WiFi.
  * 
  * Features:
@@ -34,7 +34,7 @@
 #include <ArduinoJson.h>
 
 /**
- * WebServer class
+ * SCARAWebServer class
  * 
  * Provides a web interface and REST API for the SCARA robot.
  * 
@@ -52,12 +52,12 @@
  * 
  * Also serves static files from LittleFS (HTML, CSS, JS).
  */
-class WebServer {
+class SCARAWebServer {
 public:
     /**
-     * Constructor - creates a new WebServer object.
+     * Constructor - creates a new SCARAWebServer object.
      */
-    WebServer();
+    SCARAWebServer();
 
     /**
      * Initialize the web server.

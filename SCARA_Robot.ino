@@ -37,6 +37,9 @@
 // Robot configuration (pins, dimensions, limits)
 #include "config/robot_config.h"
 
+// I2C communication for encoders
+#include <Wire.h>
+
 // Motor driver for stepper motor control
 #include "drivers/motor_driver.h"
 
@@ -85,7 +88,7 @@ MotorDriver penMotor;
 OTAManager ota;
 
 /** Web server for HTTP API and web interface */
-WebServer webServer;
+SCARAWebServer webServer;
 
 /** Inverse kinematics calculator */
 InverseKinematics ik;
