@@ -10,13 +10,13 @@
  * - REST API endpoints for movement, calibration, and status
  * - Serves static web files (HTML, CSS, JS) from LittleFS
  * - JSON responses for all API calls
- * - Built on ESPAsyncWebServer for non-blocking operation
+ * - Built on ESP32 WebServer library for compatibility
  * 
  * This module allows you to:
  * - Control the robot from a web browser
  * - Send movement commands via HTTP POST
  * - Get robot status via HTTP GET
- * - Upload a custom web interface later (Step 8)
+ * - Upload a custom web interface later
  * 
  * =============================================================================
  */
@@ -27,8 +27,8 @@
 // Include Arduino framework
 #include <Arduino.h>
 
-// Include AsyncWebServer library for non-blocking web server
-#include <ESPAsyncWebServer.h>
+// Include ESP32 WebServer library (built-in, no external library needed)
+#include <WebServer.h>
 
 // Include ArduinoJson for parsing and creating JSON
 #include <ArduinoJson.h>
@@ -73,9 +73,6 @@ public:
 
     /**
      * Handle client connections - call in main loop.
-     * 
-     * Although AsyncWebServer is non-blocking, this can be used
-     * for any periodic maintenance tasks.
      */
     void handleClient();
 
@@ -149,32 +146,27 @@ public:
     WorkspaceCallback onWorkspace = nullptr;
 
 private:
-    // The async web server instance
-    AsyncWebServer* _server;
+    // The web server instance (using ESP32 built-in WebServer)
+    WebServer _server;
 
     // Port number for the web server
     static const int WEB_PORT = 80;
 
-    /**
-     * Create a JSON response object.
-     * Helper function to build consistent response format.
-     * 
-     * @param response  JsonDocument to populate
-     * @param success   Whether the operation was successful
-     * @param message   Human-readable message
-     */
-    void _createResponse(JsonDocument& response, bool success, const char* message);
+    // Handler functions for API endpoints
+    void handleStatus();
+    void handleMove();
+    void handleMoveRel();
+    void handlePen();
+    void handleHome();
+    void handleCalibrateEncoder();
+    void handleCalibratePID();
+    void handleJog();
+    void handleMotorRaw();
+    void handleWorkspace();
+    void handleNotFound();
 
-    /**
-     * Send a JSON response to a web request.
-     * 
-     * @param request  The web request to respond to
-     * @param success  Whether the operation was successful
-     * @param message  Human-readable message
-     * @param data     Optional additional JSON data (can be null)
-     */
-    void _sendJsonResponse(AsyncWebServerRequest* request, bool success, 
-                          const char* message, JsonObject* data = nullptr);
+    // Helper to send JSON response
+    void sendJsonResponse(bool success, const char* message);
 };
 
 #endif  // WEB_SERVER_H           // End of the #ifndef guard block
